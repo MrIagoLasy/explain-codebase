@@ -1,30 +1,136 @@
 ---
 name: explain-codebase
-description: Estuda um repositório inteiro (ou vários que se conversam) e escreve um documento único que ensina o sistema do alto nível ao baixo nível, com método Feynman. Lê TODOS os arquivos via subagentes em paralelo, monta diagrama, árvore comentada de pastas, o fluxo ponta a ponta, e a ordem ideal de leitura do código. Use quando o pedido for "me ajuda a estudar esse código", "explica esse projeto", "preciso entender esse repo", "assumi esse sistema e não sei nada dele", "documenta a arquitetura", "onboarding nesse codebase", "o que faz cada pasta aqui" — mesmo sem citar a skill. Serve tanto para repo herdado quanto para revisitar projeto próprio esquecido.
+description: Estuda um repositório inteiro (ou vários que se conversam) e escreve um documento que ensina o sistema como NARRATIVA, em fluxos encadeados, não como catálogo de pastas e funções. Lê todos os arquivos via subagentes em paralelo e produz duas partes - a história de como o sistema funciona, e depois o mapa de navegação ancorado nessa história. Use quando o pedido for "me ajuda a estudar esse código", "explica esse projeto", "preciso entender esse repo", "assumi esse sistema e não sei nada dele", "documenta a arquitetura", "onboarding nesse codebase" — mesmo sem citar a skill. Serve para repo herdado e para revisitar projeto próprio esquecido.
 argument-hint: [caminho do repo] [+ outros repos relacionados]
 ---
 
 # explain-codebase
 
-Produz **um documento** (`explicacao.md` na raiz do projeto, salvo o usuário pedir
-outro caminho) que faz alguém sentar uma hora, ler até o fim, e sair sabendo
-navegar o sistema sozinho.
+Produz **um documento** (`fluxos.md` na raiz do projeto, salvo pedido diferente) que
+faz alguém sentar, ler de ponta a ponta, e sair entendendo o sistema.
 
-Não é README, não é changelog, não é lista de arquivos. É **aula escrita**.
+Não é README, não é changelog, não é documentação de referência. É **aula escrita**.
 
-## O princípio que organiza tudo
+## A descoberta que define esta skill
 
-**Cada seção assume o que veio antes e nada do que vem depois.**
+Documentação organizada como catálogo — árvore de pastas, lista de módulos,
+inventário de funções — **não gruda**. Feedback real de quem leu:
 
-Quem parar na metade entendeu a metade de cima, que é a que importa para navegar.
-Isso proíbe: falar de uma tabela antes de mostrar quem escreve nela, citar um
-módulo antes de dizer para que serve, usar um termo do domínio antes de definir.
+> "quase dormi lendo... eram só informações soltas jogadas. Ao ler o próximo item já
+> esqueci o anterior, diferente de história, onde cada coisa que vem depois dá
+> sentido ao anterior."
 
-## O fluxo
+O motivo é simples: num catálogo cada item é independente, então o leitor precisa
+segurar tudo na memória sem apoio. Numa narrativa, cada parte nova **dá sentido
+retroativo** à anterior, e a memória trabalha a favor.
 
-### 1. Reconhecimento (rápido, você mesmo)
+Então a regra desta skill: **conte fluxos, não estruture inventários.**
 
-Antes de delegar qualquer coisa:
+## O formato: duas partes
+
+### Parte 1 — os fluxos (é o documento de verdade)
+
+Uma sequência de histórias. Cada uma segue **uma coisa acontecendo** no sistema, do
+começo ao fim: um request chegando, um job rodando, um usuário clicando.
+
+Regras que fazem isso funcionar:
+
+- **Zero listas de arquivos, zero catálogo de funções, zero árvore de pastas.**
+  Nome de arquivo aparece como âncora curta no fim do parágrafo (`arquivo.py:123`),
+  nunca como cabeçalho ou lista.
+- **Cada seção assume o que veio antes e NADA do que vem depois.** Ver abaixo — é a
+  regra mais violada e a que mais estraga o documento.
+- **Cada conceito nasce quando resolve um problema que o leitor acabou de ver.**
+  Exceto vocabulário do domínio, que vai na abertura (ver abaixo).
+- **Os 3 ou 4 primeiros fluxos são a coluna vertebral.** Com eles o leitor já
+  entende o sistema; os demais são bordas e casos especiais.
+- **Fluxos paralelos viram histórias separadas**, cada uma contada do próprio
+  começo. Não tente desenhar concorrência numa narrativa linear.
+- **Incidente vira fluxo.** "Uma cadência quase matou um número" ensina mais sobre
+  as travas do que qualquer descrição delas.
+- **Feche com o diagrama do sistema inteiro.** No fim ele é reconhecimento, não
+  introdução — o leitor já viu cada peça funcionando.
+- **E com as 4 ou 5 ideias que sustentam tudo**, numeradas. É o que fica.
+
+Detalhe de como escrever cada tipo de fluxo: `references/narrativa.md`.
+
+### As três regras que mais custam quando quebradas
+
+Estas nasceram de erro real cometido escrevendo um documento destes. Cada uma passou
+despercebida na revisão e foi o leitor que apontou.
+
+**1. Pseudocódigo, nunca código literal.** A informação é a decisão, não a sintaxe.
+
+```
+RUIM:  const enc = req.headers.get("content-encoding")?.toLowerCase();
+       if (enc === "gzip") { const ds = new DecompressionStream("gzip"); ... }
+
+BOM:   o corpo pode vir comprimido, e o runtime só descomprime nas respostas
+       que ele busca, não nas requisições que recebe. Sem esse tratamento, a
+       leitura do JSON quebra antes de começar. (index.ts:16)
+```
+
+Use bloco de pseudocódigo quando a **estrutura da decisão** importa (uma query com
+seis condições, uma ordem de verificações, uma precedência). Use prosa quando só o
+**efeito** importa. Nunca cole o original: quem quiser lê pela âncora.
+
+**2. Vocabulário do domínio vai na abertura, não no meio.** A regra "conceito nasce
+quando resolve um problema" vale para **mecanismo**, não para **substantivo do
+domínio**.
+
+Se o sistema tem duas linhas de WhatsApp, dois tipos de usuário, três ambientes — isso
+é fato do mundo, não detalhe de implementação. Apresentar no meio do Fluxo 1 obriga o
+leitor a reinterpretar o que já leu.
+
+Teste: se o leitor precisar voltar para reler um parágrafo anterior à luz do que
+acabou de aprender, o conceito entrou tarde.
+
+**3. Zero referência para frente.** Referência para **trás** é ótima (reforça o
+encadeamento e recompensa quem leu em ordem). Para **frente** é dívida: manda o leitor
+guardar uma pergunta que você não vai responder agora.
+
+```
+RUIM:  "tem um nome que mente, e isso está no Fluxo 7"
+BOM:   explica ali, em duas frases, por que o nome mente
+
+RUIM:  "regras rígidas, que o Fluxo 3 detalha"
+BOM:   "regras rígidas de quando e como você pode falar"
+```
+
+Quando o gancho for genuinamente útil, deixe **sem o número**: "isso tem uma
+consequência que aparece mais adiante" sinaliza sem criar dívida específica.
+
+Ao terminar o documento, **audite**: procure toda menção a seção futura (`grep -n
+"Fluxo [0-9]"` ou equivalente) e resolva uma a uma. Na Parte 2 as referências são
+permitidas — ali é índice de consulta, não narrativa.
+
+### Parte 2 — o mapa de navegação
+
+Depois de entender, a pessoa precisa **achar as coisas**. Mas o mapa não pode ser
+uma árvore de pastas — isso reintroduz o problema do catálogo.
+
+A solução: **ancore o mapa nos fluxos que o leitor acabou de ler**.
+
+- **Onde cada fluxo acontece** — para cada história da Parte 1, os arquivos que ela
+  atravessa, na ordem em que ela os atravessa, com `arquivo:linha` nos pontos-chave.
+  Não é informação nova: é reconhecimento.
+- **A hierarquia real** — núcleo (se quebrar, para tudo), o que muda comportamento
+  sem mudar código, motores independentes, suporte, satélites, legado com partes
+  vivas, lixo declarado.
+- **As armadilhas de nome** — arquivo cujo nome mente, doc desatualizado, pasta que
+  parece morta e não é.
+- **Como as peças se comunicam** — por banco? HTTP? import? Isso quase nunca
+  corresponde à estrutura de pastas, e é o que mais confunde.
+- **Roteiros de leitura** por objetivo (entender o coração, mexer em algo, entender
+  as decisões).
+- **Mapa de sintomas** — tabela "quando X estiver errado, olhe Y". É a seção que a
+  pessoa mais volta a consultar.
+
+Detalhe de cada seção: `references/mapa-navegacao.md`.
+
+## O processo
+
+### 1. Reconhecimento (você mesmo, rápido)
 
 ```bash
 git ls-files | wc -l          # tamanho real
@@ -33,109 +139,83 @@ git log --oneline -15         # o que mudou por último = o que está vivo
 ls docs/ *.md 2>/dev/null     # docs existentes
 ```
 
-Leia os docs de arquitetura que existirem **primeiro**. Eles dão vocabulário — e
-com frequência estão desatualizados, o que já é um achado a registrar.
-
-Se o usuário citou mais de um repo (ou você descobrir que existe um irmão que
-consome o mesmo banco/API), inclua todos. Sistema que se conversa se estuda junto.
+Leia os docs de arquitetura primeiro — dão vocabulário, e quando estão
+desatualizados isso já é achado. Se houver repo irmão que compartilha banco ou API,
+inclua: sistema que se conversa se estuda junto.
 
 ### 2. Leitura completa via subagentes em paralelo
 
-Você não lê o repo sozinho — estouraria o contexto e você perderia o fio.
-Delegue por **camada**, não por pasta alfabética. Um subagente por frente, todos
-disparados na mesma mensagem.
+Você não lê sozinho: estouraria o contexto e perderia o fio. Delegue por **camada de
+responsabilidade**, todos disparados na mesma mensagem. De 4 a 8 frentes.
 
-Fatiamento que costuma funcionar (adapte ao repo):
+O prompt de cada um precisa pedir Read completo (nunca grep), `arquivo:linha`, e
+explicitamente **os comentários que contam incidentes**. Modelo pronto e critério de
+fatiamento: `references/leitura-paralela.md`.
 
-| Frente | Escopo |
-|---|---|
-| Núcleo | o que roda em produção hoje, o "coração" |
-| Camadas de saída | integrações externas, clientes de API, envio |
-| Infra | workers, jobs, containers, deploy, config |
-| Legado | o que foi substituído — **e o que dele ainda está vivo** |
-| Dados | schema, migrações, triggers, views |
-| Interface | frontend, painéis, CLI |
-| História | docs de design, specs, scripts operacionais |
+### 3. Achar as histórias
 
-O prompt de cada subagente precisa pedir: **Read completo, sem grep**, arquivo por
-arquivo, com `arquivo:linha` nas citações, e explicitamente **os comentários que
-contam incidentes**. Modelo pronto e o resto da técnica: `references/leitura-paralela.md`.
+Este é o passo que os relatórios não fazem por você. Com tudo em mãos, pergunte:
 
-### 3. Reconciliar o que voltou
+- Qual é **o evento principal** do sistema? Esse é o Fluxo 1.
+- O que acontece quando o Fluxo 1 **não dá conta**? Esse é o 2.
+- Que **restrição externa** molda o desenho? Vira um fluxo próprio.
+- Qual **incidente** deixou mais cicatriz no código? Vira fluxo.
+- O que roda **em paralelo** ao principal? Um fluxo cada.
+- O que acontece quando **ninguém está olhando**? Costuma fechar bem.
 
-Os relatórios vão se contradizer, e é aí que está o ouro. Procure ativamente:
+Ordene por dependência narrativa: cada fluxo pode usar o que o anterior estabeleceu,
+e nada do que vem depois.
 
-- **doc que mente** — arquitetura documentada que não é a implementada
-- **código morto que parece vivo** (e o inverso, que é pior)
-- **regra duplicada** em dois lugares, sincronizada à mão
-- **nome que engana** — arquivo/função cujo nome diz outra coisa
-- **a mesma coisa resolvida de jeitos incompatíveis** no mesmo sistema
+### 4. Verificar antes de escrever
 
-Se um relatório afirmar algo estrutural que muda o desenho (ex: "não existe push,
-é polling"), **verifique você mesmo** antes de escrever. Subagente erra.
+Subagente erra com confiança. Cheque você mesmo toda afirmação que muda o desenho
+("não existe push, é polling"), contradiz outro relatório, ou contradiz a
+documentação do repo. Um Read resolve.
 
-### 4. Escrever o documento
+Contradição entre relatórios costuma ser achado real: duas implementações da mesma
+coisa.
 
-Estrutura padrão, do alto para o baixo. Detalhe de cada seção e o que faz cada uma
-funcionar: `references/estrutura-do-doc.md`.
+### 5. Escrever e entregar
 
-```
- 1. O que esse sistema é          domínio, quem é quem, o problema real
- 2. O mapa                        diagrama ASCII + como as peças conversam
- 3. As pastas                     árvore comentada, uma linha por pasta
- 4. A jornada de um <evento>      ← A SEÇÃO MAIS IMPORTANTE. ponta a ponta
- 5..N. Cada subsistema            um por seção, na ordem de dependência
- N+1. O modelo de dados           depois de já ter visto as tabelas em uso
- N+2. A costura                   onde as partes se tocam e brigam
- N+3. A história                  em que ordem nasceu, e por quê
- N+4. O que está aberto           dívidas, riscos, buracos
- A. Árvore completa               arquivo por arquivo, marcado vivo/legado/morto
- B. Ordem de leitura              trilhas, com o que procurar em cada arquivo
-```
-
-A seção 4 é a espinha dorsal: siga **um evento real** (um request, uma mensagem,
-um job) atravessando todas as camadas. É o que transforma lista de arquivos em
-entendimento.
-
-### 5. Entregar
-
-Escreva o arquivo e resuma em poucas linhas o que ele cobre e as 2 ou 3
-descobertas que mudam a leitura do sistema. Ofereça aprofundar o que ficou.
+Escreva o documento, depois resuma em poucas linhas o que ele cobre e as 2 ou 3
+descobertas que mudam a leitura do sistema.
 
 ## Método Feynman, na prática
 
-A regra: **explique pelo problema que o código resolve, não pela sua
-implementação.**
+**Explique pelo problema que o código resolve, não pela sua implementação.**
 
-| Não | Sim |
+| Paráfrase (ruim) | Explicação (bom) |
 |---|---|
-| "sorteia entre 60 e 180 segundos" | "gente de verdade não responde em 800ms; responder instantâneo denuncia automação" |
-| "usa advisory lock" | "dois processos podem subir ao mesmo tempo; sem isso o cliente recebe a mensagem em dobro" |
-| "a coluna é nullable" | "NULL aqui significa IA; só o literal 'humano' marca pessoa" |
+| "sorteia entre 60 e 180 segundos" | "gente de verdade não responde em 800ms; instantâneo denuncia automação" |
+| "usa advisory lock" | "dois processos podem subir juntos; sem isso o cliente recebe em dobro" |
+| "a coluna aceita NULL" | "NULL aqui significa IA; só o literal 'humano' marca pessoa" |
 
-Regras de escrita que sustentam isso: `references/estilo.md`.
+Teste: se a frase descreve *o que o código faz*, é paráfrase e não vale o espaço. Se
+descreve *por que ele precisa existir*, é explicação.
+
+Regras de escrita completas: `references/estilo.md`.
 
 Três hábitos que valem mais que o resto:
 
-1. **Caça o post-mortem.** Em projeto de produção, os comentários não são
-   documentação, são cicatrizes. "Isso quebrou em 07/08 e derrubou X" explica o
-   código melhor que qualquer paráfrase. Cite com o número medido.
+1. **Caça o post-mortem.** Em projeto de produção os comentários são cicatrizes, não
+   documentação. Cite com o número medido: "derrubou o número em 23 minutos" vale
+   mais que "causou problemas".
 2. **Nomeie a armadilha.** Toda base tem uma coisa cujo nome mente. Encontre e dê
-   destaque — é o que salva horas de quem lê.
+   destaque.
 3. **Diga o que NÃO ler.** Economizar o tempo do leitor é metade do valor.
 
 ## Escala
 
-- **Repo pequeno** (<40 arquivos): leia você mesmo, pule os subagentes, doc mais curto.
-- **Médio** (40 a 300): 4 a 7 subagentes, doc completo.
-- **Grande** (300+) ou múltiplos repos: fatie por camada **e** por repo, e considere
-  duas rodadas — mapa primeiro, aprofundamento depois.
+- **Repo pequeno** (<40 arquivos): leia você mesmo, pule subagentes, 3 ou 4 fluxos.
+- **Médio** (40 a 300): 4 a 7 subagentes, 8 a 12 fluxos.
+- **Grande** ou múltiplos repos: fatie por camada e por repo; considere duas rodadas.
 
-Se o usuário pedir só uma parte ("me explica só o backend"), estude só ela, mas
-mantenha a seção 2 (o mapa) mostrando onde ela se encaixa no todo.
+Se o usuário pedir só uma parte, estude só ela — mas mantenha um fluxo que mostre
+onde ela se encaixa no todo.
 
 ## Referências
 
-- `references/leitura-paralela.md` — como fatiar, o prompt de subagente pronto, o que sempre pedir
-- `references/estrutura-do-doc.md` — cada seção do documento, o que entra e o que a faz funcionar
-- `references/estilo.md` — regras de escrita, tabelas, diagramas ASCII, o que evitar
+- `references/narrativa.md` — como construir cada fluxo, tipos que funcionam, erros comuns
+- `references/mapa-navegacao.md` — a Parte 2, seção por seção
+- `references/leitura-paralela.md` — fatiamento, prompt de subagente, o que sempre pedir
+- `references/estilo.md` — regras de escrita, diagramas, o que evitar

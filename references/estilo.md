@@ -48,9 +48,13 @@ worker de ingestão ── grava em messages ──▶ e para.
 supervisor faz poll ── acha o lead
 ```
 
-**Bloco de código** só onde o código é a explicação: a query central, o `if` que
-decide, o trecho que contém a trava. Comente as linhas que importam, dentro do
-próprio bloco.
+**Bloco de pseudocódigo** onde a estrutura da decisão importa: a query central, a
+ordem das verificações, a precedência entre regras. Escreva em português, com
+comentários apontando o que cada linha garante.
+
+Nunca cole código literal. A informação é a decisão, não a sintaxe — e a âncora
+`arquivo.py:123` já leva quem quiser ao original. Se você está copiando do editor,
+provavelmente errou. Detalhes em `narrativa.md`.
 
 **Citação** para frase real do repo que explica melhor que sua paráfrase. Use com
 parcimônia — três ou quatro no documento inteiro, nas melhores.
