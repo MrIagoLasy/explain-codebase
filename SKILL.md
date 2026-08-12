@@ -175,12 +175,67 @@ documentação do repo. Um Read resolve.
 Contradição entre relatórios costuma ser achado real: duas implementações da mesma
 coisa.
 
+**E cuidado com a hierarquia das fontes.** Nem toda evidência vale o mesmo:
+
+```
+o que está rodando   ← deploy, endpoint respondendo, log, tabela com dado
+     vence
+o código no repo     ← pode não ser o que foi buildado
+     vence
+o README / doc       ← declara INTENÇÃO, não estado
+```
+
+Um README dizendo "substituímos X por completo" não prova que X morreu. Se der para
+checar o que está no ar (uma URL, uma listagem de deploy, uma consulta), cheque —
+principalmente antes de escrever que algo está morto ou vivo.
+
+Um erro real cometido nesta skill: um auditor citou o README dizendo que o painel
+antigo tinha sido substituído, eu aceitei e reescrevi a seção. O worker tinha deploy
+três dias posterior à data da substituição e respondia normalmente. A versão original
+estava certa; a "correção" é que estava errada.
+
 ### 5. Escrever e entregar
 
 Escreva o documento, depois resuma em poucas linhas o que ele cobre e as 2 ou 3
 descobertas que mudam a leitura do sistema.
 
-### 6. Decidir o nível de anonimização
+### 6. Auditar o que você escreveu (não é opcional)
+
+Documento escrito a partir de relatório de subagente sai **plausível e parcialmente
+falso**. Você não vai perceber relendo: o texto é coerente, e é justamente por isso que
+o erro passa.
+
+Lance auditores independentes, um por bloco de fluxos, com uma instrução diferente da
+que você usou para ler:
+
+> TAREFA DE AUDITORIA. Verifique afirmações contra o código real, não escreva
+> documentação. Leia as linhas X a Y do documento. Ele foi escrito a partir de
+> relatórios de terceiros e PODE CONTER ERROS; sua missão é achá-los.
+>
+> Para cada afirmação técnica, abra o código e confira. Liste APENAS: ERROS (citação do
+> doc, o que o código diz, arquivo:linha), IMPRECISÕES, NÚMEROS ERRADOS, CITAÇÕES QUE
+> NÃO SÃO LITERAIS, OMISSÕES CRÍTICAS. Se estiver correto, não liste.
+
+Enumere no prompt os pontos específicos a conferir — cada número, cada citação entre
+aspas, cada `arquivo:linha`. Auditor sem alvo devolve resumo; auditor com lista devolve
+correções.
+
+O que mais aparece errado, por frequência:
+
+1. **Números inventados ou trocados** ("duas semanas" onde o código diz "15 dias").
+2. **Citações formatadas como literais** que são paráfrase. Se está entre aspas ou em
+   bloco, tem que ser palavra por palavra.
+3. **Condições faltando** numa consulta ou numa sequência de verificações.
+4. **Absolutos sem a exceção** ("o cliente não recebe nada" quando existe um caso em
+   que recebe).
+5. **`arquivo:linha` deslocado** (decorador antes da função, código que andou).
+6. **Escopo inflado** ("só três operações fazem X" quando é "só três *das ferramentas*").
+7. **Gate omitido** — a flag que decide se aquele motor sequer envia.
+
+E audite também a estrutura: `grep` por referências a seções futuras (ver a regra 3
+acima), e teste se cada caminho de arquivo citado existe de verdade.
+
+### 7. Decidir o nível de anonimização
 
 **Pergunte ao usuário para onde o documento vai** antes de escrever, ou entregue a
 versão interna e ofereça a sanitizada.
