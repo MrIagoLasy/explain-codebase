@@ -180,6 +180,32 @@ coisa.
 Escreva o documento, depois resuma em poucas linhas o que ele cobre e as 2 ou 3
 descobertas que mudam a leitura do sistema.
 
+### 6. Decidir o nível de anonimização
+
+**Pergunte ao usuário para onde o documento vai** antes de escrever, ou entregue a
+versão interna e ofereça a sanitizada.
+
+| Destino | O que pode ficar |
+|---|---|
+| Interno (o repo, o time, o cliente) | tudo. Nome real ajuda a bater com o código |
+| Portfólio, blog, exemplo público | nada identificável: papéis no lugar de nomes |
+
+O que costuma vazar sem querer, em ordem de risco: **credencial** (token, chave, id
+de instância, string de conexão), **endpoint privado** (URL de webhook, subdomínio
+interno, caminho secreto), **dado pessoal** (telefone, e-mail, nome de cliente final
+que aparece em post-mortem de código), **identidade comercial** (nome da empresa, do
+produto, valores de tabela, métricas de conversão).
+
+Credencial e endpoint privado **nunca** entram, nem na versão interna: documento
+circula por canais que o repositório não controla. Nome e métrica são decisão do
+usuário.
+
+Ao sanitizar, troque por **papel**, não por letra: "o dono do produto" e "o vendedor
+humano" preservam a narrativa; "a Pessoa A" e "a Pessoa B" a destroem.
+
+E audite antes de entregar qualquer versão pública — `grep` por nomes próprios,
+domínios, telefones, valores monetários e identificadores longos.
+
 ## Método Feynman, na prática
 
 **Explique pelo problema que o código resolve, não pela sua implementação.**

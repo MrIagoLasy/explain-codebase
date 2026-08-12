@@ -64,8 +64,8 @@ parcimônia — três ou quatro no documento inteiro, nas melhores.
 **Número medido.** "Derrubou o número de GREEN para RED em 23 minutos" vale mais
 que "causou problemas de qualidade". Se o repo tem o número, use.
 
-**Data e atribuição.** "Decisão do Fabiano, 08/08/2026" mostra que aquilo foi
-escolha, não acidente.
+**Data e atribuição.** "Decisão do dono do produto, 08/08/2026" mostra que aquilo foi
+escolha, não acidente. (Se o documento for sair da empresa, use o papel, não o nome.)
 
 **`arquivo:linha`** nas afirmações verificáveis. O leitor confere.
 
